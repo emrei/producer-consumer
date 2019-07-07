@@ -28,7 +28,6 @@ public class OneToOneCommunicatorTests {
     private Player initiator;
     private Player target;
     private MessageQueue messageQueue;
-    private MessageQueue responseQueue;
     private String expectedMessage;
     private String expectedResponse;
 
@@ -41,26 +40,26 @@ public class OneToOneCommunicatorTests {
 	playerIdList.add(target.getId());
 
 	messageQueue = new MessageQueue(playerIdList, MAX_MESSAGE_NUMBER);
-	responseQueue = new MessageQueue(playerIdList, MAX_MESSAGE_NUMBER);
-	communicator = new OneToOneCommunicator(messageQueue, responseQueue, initiator, target, MAX_MESSAGE_NUMBER);
+
+	communicator = new OneToOneCommunicator(messageQueue, initiator, target, MAX_MESSAGE_NUMBER);
 
 	expectedMessage = "----------This is your last chance.----------";
 	expectedResponse = "----------This is your last chance.---------- 1";
     }
 
     @Test
-    public void testProduceMessage() throws InterruptedException {
-	Message actualMessage = communicator.produceMessage();
-
-	assertEquals(initiator.getId(), actualMessage.getSourcePlayerId());
-	assertEquals(target.getId(), actualMessage.getTargetPlayerId());
-	assertEquals(expectedMessage, actualMessage.getContent());
+    public void testInitiate() throws InterruptedException {
+	communicator.initiate();
+	Message message = messageQueue.getMessage(target.getId());
+	assertEquals(initiator.getId(), message.getSourcePlayerId());
+	assertEquals(target.getId(), message.getTargetPlayerId());
+	assertEquals(expectedMessage, message.getContent());
     }
 
     @Test
     public void testConsumeMessage() throws InterruptedException {
-	communicator.produceMessage();
-	Message actualMessage = communicator.consumeMessage();
+	communicator.initiate();
+	Message actualMessage = communicator.consumeMessage(target);
 	assertEquals(initiator.getId(), actualMessage.getSourcePlayerId());
 	assertEquals(target.getId(), actualMessage.getTargetPlayerId());
 	assertEquals(expectedMessage, actualMessage.getContent());
@@ -68,25 +67,17 @@ public class OneToOneCommunicatorTests {
 
     @Test
     public void testSendResponse() throws InterruptedException {
-	communicator.produceMessage();
-	Message message = communicator.consumeMessage();
+	communicator.initiate();
+	communicator.increaseMessageCount(target);
+	Message message = communicator.consumeMessage(target);
 	Message response = communicator.sendResponse(message);
 	assertEquals(expectedResponse, response.getContent());
     }
-
+    
     @Test
-    public void testReceiveResponse() throws InterruptedException {
-	communicator.produceMessage();
-	communicator.consumeMessage();
-	communicator.sendResponse(createMessage());
-	Message response = communicator.receiveResponse();
-	assertEquals(expectedResponse, response.getContent());
+    public void testIsRunning() {
+	assertEquals(true, communicator.isRunning());
     }
-
-    private Message createMessage() {
-	Message message = new Message(UUID.randomUUID(), initiator.getId(), target.getId());
-	message.setContent("----------This is your last chance.----------");
-	return message;
-    }
+    
 
 }

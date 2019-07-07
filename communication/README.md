@@ -2,8 +2,7 @@
 This project has been developed for 360T coding challenge task.
 This is a simple program which includes two player who communicates with each other.
 Program starts and initiator player starts to send messages to target player.
-Every message should be replied by target before proceeding next message.
-When initiator player receives reply then it send next message. It is a synchronized message structure.
+After that, whenever a player receives a message, then it sends a response to other player and it continues like this.
 For the messages BlockingQueue data structure has been used, since it provides wait/notify functions without managing them manually. Some delay/wait has been added into Putting and Getting messages functions in order to track better message transfers via standard output. Standard output has been used instead of logging in order to see messages easily while program running.
 Test coverage of this project is 71%.
 

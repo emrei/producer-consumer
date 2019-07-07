@@ -6,13 +6,11 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.trading.communication.communicator.Communicator;
 import com.trading.communication.communicator.impl.OneToOneCommunicator;
 import com.trading.communication.engine.CommunicationEngine;
 import com.trading.communication.model.MessageQueue;
 import com.trading.communication.model.Player;
 import com.trading.communication.runnable.Consumer;
-import com.trading.communication.runnable.Producer;
 
 /**
  * Class which manages player communications
@@ -23,25 +21,55 @@ import com.trading.communication.runnable.Producer;
 public class PlayerCommunicationEngine implements CommunicationEngine {
 
     private static final int MAX_MESSAGE_NUMBER = 10;
+    private Player initiator;
+    private Player target;
+    private MessageQueue messageQueue;
+    OneToOneCommunicator communicator;
+
     @Override
     public void communicate() {
-	Player initiator = new Player(UUID.randomUUID(), "Morpheus", "");
-	Player target = new Player(UUID.randomUUID(), "Neo", "");
+	createPlayers();
+	createMessageQueue();
+	createCommunicator();
+	initiateCommunicator();
+	executeCommunicator();
+
+    }
+
+    private void executeCommunicator() {
+	ExecutorService executor = Executors.newFixedThreadPool(2);
+
+	executor.execute(new Consumer(communicator, initiator));
+	executor.execute(new Consumer(communicator, target));
+	executor.shutdown();
+
+    }
+
+    private void initiateCommunicator() {
+	try {
+	    communicator.initiate();
+	} catch (InterruptedException e) {
+	    e.printStackTrace();
+	}
+
+    }
+
+    private void createCommunicator() {
+	communicator = new OneToOneCommunicator(messageQueue, initiator, target, MAX_MESSAGE_NUMBER);
+
+    }
+
+    private void createMessageQueue() {
 	List<UUID> playerIdList = new ArrayList<UUID>();
 	playerIdList.add(initiator.getId());
 	playerIdList.add(target.getId());
-	
-	MessageQueue messageQueue = new MessageQueue(playerIdList, MAX_MESSAGE_NUMBER);
-	MessageQueue responseQueue = new MessageQueue(playerIdList, MAX_MESSAGE_NUMBER);
+	messageQueue = new MessageQueue(playerIdList, MAX_MESSAGE_NUMBER);
 
-	Communicator communicator = new OneToOneCommunicator(messageQueue, responseQueue, initiator, target, MAX_MESSAGE_NUMBER);
+    }
 
-	ExecutorService executor = Executors.newFixedThreadPool(2);
-	Producer producer = new Producer(communicator);
-	Consumer consumer = new Consumer(communicator);
-	executor.execute(producer);
-	executor.execute(consumer);
-	executor.shutdown();
+    private void createPlayers() {
+	initiator = new Player(UUID.randomUUID(), "Morpheus", "");
+	target = new Player(UUID.randomUUID(), "Neo", "");
 
     }
 
