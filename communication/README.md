@@ -1,5 +1,5 @@
-360T PLAYERS CODING ASSIGNMENT
-This project has been developed for 360T coding challenge task.
+SIMPLE PRODUCER CONSUMER APPLICATION
+
 This is a simple program which includes two player who communicates with each other.
 Program starts and initiator player starts to send messages to target player.
 After that, whenever a player receives a message, then it sends a response to other player and it continues like this.
